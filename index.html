@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>汉语 — Тренажёр китайского</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f;
+  --surface: #1a1a1a;
+  --surface2: #222;
+  --border: #2a2a2a;
+  --text: #e8e4dc;
+  --muted: #666;
+  --accent: #c8a96e;
+  --accent2: #7eb8c8;
+  --green: #6db88a;
+  --red: #c86e6e;
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  font-size: 15px;
+}
+.app { max-width: 680px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+/* HEADER */
+.header { text-align: center; margin-bottom: 2.5rem; }
+.header-char { font-family: 'Noto Serif SC', serif; font-size: 56px; color: var(--accent); line-height: 1; margin-bottom: 0.5rem; letter-spacing: -2px; }
+.header-sub { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+
+/* NAV */
+.nav { display: flex; gap: 4px; background: var(--surface); border-radius: var(--radius); padding: 4px; margin-bottom: 2rem; }
+.nav-btn { flex: 1; padding: 9px 8px; border: none; background: none; color: var(--muted); cursor: pointer; border-radius: 9px; font-size: 13px; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { background: var(--surface2); color: var(--accent); }
+
+/* SECTIONS */
+.section { display: none; }
+.section.active { display: block; }
+
+/* FLASHCARDS */
+.card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 12px; color: var(--muted); }
+.flashcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  min-height: 260px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.1s;
+  padding: 2rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+.flashcard:hover { border-color: #3a3a3a; transform: translateY(-1px); }
+.fc-char { font-family: 'Noto Serif SC', serif; font-size: 96px; color: var(--text); line-height: 1; margin-bottom: 0.5rem; }
+.fc-hint { font-size: 12px; color: var(--muted); margin-top: 1.5rem; }
+.fc-back { text-align: center; display: none; margin-top: 1rem; }
+.fc-pinyin { font-size: 22px; color: var(--accent); margin-bottom: 0.5rem; font-weight: 300; }
+.fc-meaning { font-size: 18px; color: var(--text); }
+.fc-example { font-size: 13px; color: var(--muted); margin-top: 0.75rem; line-height: 1.6; }
+.card-actions { display: none; gap: 12px; }
+.card-actions.show { display: flex; }
+.action-btn { flex: 1; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius); background: none; font-family: 'Inter', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+.action-btn.bad { color: var(--red); border-color: #3a2020; }
+.action-btn.bad:hover { background: #3a2020; }
+.action-btn.ok { color: var(--muted); }
+.action-btn.ok:hover { background: var(--surface2); color: var(--text); }
+.action-btn.good { color: var(--green); border-color: #1e3a28; }
+.action-btn.good:hover { background: #1e3a28; }
+
+.dots { display: flex; gap: 6px; justify-content: center; margin-top: 1.25rem; flex-wrap: wrap; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+.dot.known { background: var(--green); }
+.dot.learning { background: var(--accent); }
+.dot.current { background: var(--text); }
+
+/* QUIZ */
+.quiz-q { font-family: 'Noto Serif SC', serif; font-size: 64px; text-align: center; color: var(--text); margin-bottom: 0.5rem; }
+.quiz-label { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 2rem; }
+.quiz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+.quiz-opt { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; cursor: pointer; transition: all 0.2s; text-align: left; }
+.quiz-opt:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.quiz-opt.correct { border-color: var(--green); background: #1e3a28; color: var(--green); }
+.quiz-opt.wrong { border-color: var(--red); background: #3a1e1e; color: var(--red); }
+.quiz-opt:disabled { cursor: default; }
+.quiz-feedback { text-align: center; font-size: 14px; color: var(--muted); min-height: 40px; padding: 10px; }
+.quiz-score { display: flex; gap: 1rem; justify-content: center; font-size: 13px; margin-bottom: 1.5rem; }
+.score-item { display: flex; align-items: center; gap: 6px; }
+.score-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* CHAT */
+.chat-msgs { min-height: 300px; max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 1rem; padding-right: 4px; }
+.chat-msgs::-webkit-scrollbar { width: 4px; }
+.chat-msgs::-webkit-scrollbar-track { background: transparent; }
+.chat-msgs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.msg { padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.7; max-width: 88%; }
+.msg.ai { background: var(--surface); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
+.msg.user { background: #1e2a1e; border: 1px solid #2a3a2a; color: var(--text); align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg.typing { color: var(--muted); font-style: italic; }
+.chat-row { display: flex; gap: 8px; }
+.chat-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+.chat-input:focus { border-color: var(--accent); }
+.chat-input::placeholder { color: var(--muted); }
+.send-btn { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; color: var(--accent); cursor: pointer; font-size: 18px; transition: all 0.2s; }
+.send-btn:hover { background: var(--surface2); border-color: var(--accent); }
+.quick-btns { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+.quick-btn { padding: 7px 12px; border: 1px solid var(--border); border-radius: 20px; background: none; color: var(--muted); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
+.quick-btn:hover { color: var(--text); border-color: #444; }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 2rem; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; text-align: center; }
+.stat-n { font-size: 32px; font-weight: 300; color: var(--accent); font-family: 'Noto Serif SC', serif; }
+.stat-l { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
+.progress-section { margin-bottom: 1.5rem; }
+.prog-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.prog-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.6s ease; }
+.word-list { display: flex; flex-direction: column; gap: 6px; margin-top: 1rem; }
+.word-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--surface); border-radius: var(--radius); font-size: 13px; border: 1px solid var(--border); }
+.word-char { font-family: 'Noto Serif SC', serif; font-size: 20px; color: var(--text); }
+.word-info { color: var(--muted); }
+.tag { font-size: 11px; padding: 3px 8px; border-radius: 20px; }
+.tag.known { background: #1e3a28; color: var(--green); }
+.tag.learning { background: #2a2010; color: var(--accent); }
+.tag.new { background: var(--surface2); color: var(--muted); }
+
+/* SETTINGS */
+.settings-group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; }
+.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.settings-row:last-child { border-bottom: none; }
+.settings-label { font-size: 14px; }
+.settings-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.api-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; width: 100%; margin-top: 8px; outline: none; }
+.api-input:focus { border-color: var(--accent); }
+.save-btn { padding: 10px 20px; background: var(--accent); border: none; border-radius: 8px; color: #1a1208; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+.save-btn:hover { opacity: 0.85; }
+.info-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; font-size: 13px; color: var(--muted); line-height: 1.7; margin-top: 1rem; }
+.info-box a { color: var(--accent); }
+
+@media (max-width: 480px) {
+  .header-char { font-size: 42px; }
+  .fc-char { font-size: 72px; }
+  .quiz-q { font-size: 48px; }
+  .quiz-opts { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .nav-btn { font-size: 12px; padding: 8px 4px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-char">汉语</div>
+    <div class="header-sub">Тренажёр китайского · HSK 1</div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="go('cards')">卡片 Карточки</button>
+    <button class="nav-btn" onclick="go('quiz')">测试 Тест</button>
+    <button class="nav-btn" onclick="go('chat')">对话 Диалог</button>
+    <button class="nav-btn" onclick="go('stats')">进度 Прогресс</button>
+    <button class="nav-btn" onclick="go('settings')">⚙</button>
+  </nav>
+
+  <!-- КАРТОЧКИ -->
+  <div class="section active" id="sec-cards">
+    <div class="card-meta">
+      <span id="card-pos">1 / 30</span>
+      <span id="card-queue" style="color:var(--accent)">Для повторения: 0</span>
+    </div>
+    <div class="flashcard" onclick="flip()" id="flashcard">
+      <div class="fc-char" id="fc-char">我</div>
+      <div class="fc-back" id="fc-back">
+        <div class="fc-pinyin" id="fc-pinyin">wǒ</div>
+        <div class="fc-meaning" id="fc-meaning">Я</div>
+        <div class="fc-example" id="fc-example">我是学生。<br><span style="font-size:11px">Wǒ shì xuésheng — Я студент.</span></div>
+      </div>
+      <div class="fc-hint" id="fc-hint">Нажми, чтобы перевернуть</div>
+    </div>
+    <div class="card-actions" id="card-actions">
+      <button class="action-btn bad" onclick="rate(1)">✗ Не знаю</button>
+      <button class="action-btn ok" onclick="rate(2)">~ Почти</button>
+      <button class="action-btn good" onclick="rate(3)">✓ Знаю</button>
+    </div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <!-- ТЕСТ -->
+  <div class="section" id="sec-quiz">
+    <div class="quiz-score">
+      <div class="score-item"><div class="score-dot" style="background:var(--green)"></div><span id="q-correct">0 правильно</span></div>
+      <div class="score-item"><div class="score-dot" style="background:var(--red)"></div><span id="q-wrong">0 неверно</span></div>
+    </div>
+    <div class="quiz-q" id="qchar">你</div>
+    <div class="quiz-label" id="qlabel">Выбери перевод</div>
+    <div class="quiz-opts" id="qopts"></div>
+    <div class="quiz-feedback" id="qfeedback"></div>
+  </div>
+
+  <!-- ДИАЛОГ -->
+  <div class="section" id="sec-chat">
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="quickSend('Проверь моё произношение слова 你好')">Проверь произношение</button>
+      <button class="quick-btn" onclick="quickSend('Дай мне задание на HSK 1')">Дай задание</button>
+      <button class="quick-btn" onclick="quickSend('Объясни тоны китайского языка')">Объясни тоны</button>
+      <button class="quick-btn" onclick="quickSend('Как будет по-китайски: я хочу есть')">Переведи фразу</button>
+    </div>
+    <div class="chat-msgs" id="chat-msgs">
+      <div class="msg ai">你好！👋 Я твой преподаватель китайского. Пиши по-русски или пробуй по-китайски — исправлю ошибки мягко и объясню всё понятно. С чего начнём?</div>
+    </div>
+    <div class="chat-row">
+      <input class="chat-input" id="chat-in" placeholder="Напиши что-нибудь..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){sendMsg();event.preventDefault()}" />
+      <button class="send-btn" onclick="sendMsg()">→</button>
+    </div>
+  </div>
+
+  <!-- ПРОГРЕСС -->
+  <div class="section" id="sec-stats">
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-n" id="s-known">0</div><div class="stat-l">Знаю</div></div>
+      <div class="stat"><div class="stat-n" id="s-learning">0</div><div class="stat-l">Учу</div></div>
+      <div class="stat"><div class="stat-n" id="s-days">0</div><div class="stat-l">Дней</div></div>
+    </div>
+    <div class="progress-section">
+      <div class="prog-label"><span>HSK 1 (150 слов)</span><span id="prog-pct">0%</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="progress-section">
+      <div class="prog-label"><span>Точность в тестах</span><span id="acc-pct">—</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="acc-fill" style="width:0%; background: linear-gradient(90deg, var(--green), var(--accent2))"></div></div>
+    </div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:0.75rem;">Изученные слова</div>
+    <div class="word-list" id="word-list"><div style="color:var(--muted);font-size:13px;">Пока нет изученных слов — начни с карточек!</div></div>
+  </div>
+
+  <!-- НАСТРОЙКИ -->
+  <div class="section" id="sec-settings">
+    <div class="settings-group">
+      <div class="settings-row" style="flex-direction:column; align-items:flex-start;">
+        <div>
+          <div class="settings-label">API ключ Anthropic</div>
+          <div class="settings-sub">Нужен для работы диалога с ИИ</div>
+        </div>
+        <input class="api-input" id="api-key-input" type="password" placeholder="sk-ant-..." />
+        <button class="save-btn" style="margin-top:10px;" onclick="saveKey()">Сохранить</button>
+      </div>
+    </div>
+    <div class="settings-group">
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Сбросить прогресс</div>
+          <div class="settings-sub">Начать изучение заново</div>
+        </div>
+        <button onclick="resetProgress()" style="padding:8px 14px; border:1px solid #3a2020; border-radius:8px; background:none; color:var(--red); cursor:pointer; font-family:'Inter',sans-serif; font-size:13px;">Сбросить</button>
+      </div>
+    </div>
+    <div class="info-box">
+      <strong style="color:var(--text);">Как получить API ключ:</strong><br>
+      1. Зайди на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      2. Создай ключ в разделе "API Keys"<br>
+      3. Пополни баланс на $5 в Billing<br>
+      4. Вставь ключ выше и нажми "Сохранить"<br><br>
+      Ключ хранится только в твоём браузере (localStorage).
+    </div>
+  </div>
+</div>
+
+<script>
+const WORDS = [
+  {c:'我',p:'wǒ',m:'Я',ex:'我是学生。(Wǒ shì xuésheng — Я студент.)'},
+  {c:'你',p:'nǐ',m:'Ты',ex:'你好吗？(Nǐ hǎo ma — Как ты?)'},
+  {c:'他',p:'tā',m:'Он',ex:'他是我的朋友。(Tā shì wǒ de péngyou — Он мой друг.)'},
+  {c:'她',p:'tā',m:'Она',ex:'她很漂亮。(Tā hěn piàoliang — Она красивая.)'},
+  {c:'好',p:'hǎo',m:'Хорошо / Хороший',ex:'很好！(Hěn hǎo — Очень хорошо!)'},
+  {c:'不',p:'bù',m:'Нет / Не',ex:'不好。(Bù hǎo — Нехорошо.)'},
+  {c:'是',p:'shì',m:'Быть / Есть (связка)',ex:'我是俄罗斯人。(Wǒ shì Éluósīrén — Я русский.)'},
+  {c:'有',p:'yǒu',m:'Иметь / Есть (наличие)',ex:'我有一本书。(Wǒ yǒu yī běn shū — У меня есть книга.)'},
+  {c:'水',p:'shuǐ',m:'Вода',ex:'我要水。(Wǒ yào shuǐ — Мне нужна вода.)'},
+  {c:'吃',p:'chī',m:'Есть (кушать)',ex:'我想吃饭。(Wǒ xiǎng chīfàn — Я хочу есть.)'},
+  {c:'喝',p:'hē',m:'Пить',ex:'喝水。(Hē shuǐ — Пить воду.)'},
+  {c:'去',p:'qù',m:'Идти / Ехать (туда)',ex:'我去学校。(Wǒ qù xuéxiào — Я иду в школу.)'},
+  {c:'来',p:'lái',m:'Приходить / Приезжать',ex:'请进来。(Qǐng jìnlái — Входите, пожалуйста.)'},
+  {c:'看',p:'kàn',m:'Смотреть / Читать',ex:'我看书。(Wǒ kàn shū — Я читаю книгу.)'},
+  {c:'说',p:'shuō',m:'Говорить',ex:'你说中文吗？(Nǐ shuō Zhōngwén ma — Ты говоришь по-китайски?)'},
+  {c:'听',p:'tīng',m:'Слушать',ex:'我听音乐。(Wǒ tīng yīnyuè — Я слушаю музыку.)'},
+  {c:'学',p:'xué',m:'Учиться / Изучать',ex:'我学汉语。(Wǒ xué Hànyǔ — Я учу китайский.)'},
+  {c:'大',p:'dà',m:'Большой',ex:'这个很大。(Zhège hěn dà — Это очень большое.)'},
+  {c:'小',p:'xiǎo',m:'Маленький',ex:'一点点。(Yīdiǎndiǎn — Немного/чуть-чуть.)'},
+  {c:'多',p:'duō',m:'Много',ex:'多谢！(Duō xiè — Большое спасибо!)'},
+  {c:'少',p:'shǎo',m:'Мало',ex:'少一点。(Shǎo yīdiǎn — Чуть меньше.)'},
+  {c:'钱',p:'qián',m:'Деньги',ex:'多少钱？(Duōshǎo qián — Сколько стоит?)'},
+  {c:'书',p:'shū',m:'Книга',ex:'这本书很好。(Zhè běn shū hěn hǎo — Эта книга хорошая.)'},
+  {c:'人',p:'rén',m:'Человек / Люди',ex:'中国人。(Zhōngguórén — Китаец.)'},
+  {c:'朋友',p:'péngyou',m:'Друг',ex:'我的好朋友。(Wǒ de hǎo péngyou — Мой хороший друг.)'},
+  {c:'老师',p:'lǎoshī',m:'Учитель',ex:'老师好！(Lǎoshī hǎo — Здравствуйте, учитель!)'},
+  {c:'学生',p:'xuésheng',m:'Студент / Ученик',ex:'我是学生。(Wǒ shì xuésheng — Я студент.)'},
+  {c:'今天',p:'jīntiān',m:'Сегодня',ex:'今天天气很好。(Jīntiān tiānqì hěn hǎo — Сегодня хорошая погода.)'},
+  {c:'明天',p:'míngtiān',m:'Завтра',ex:'明天见！(Míngtiān jiàn — До завтра!)'},
+  {c:'谢谢',p:'xiè xie',m:'Спасибо',ex:'非常谢谢！(Fēicháng xièxie — Большое спасибо!)'},
+];
+
+let state = JSON.parse(localStorage.getItem('hsk_state') || 'null') || {
+  cards: WORDS.map((_,i) => ({ idx: i, level: 0, nextReview: 0, correct: 0, wrong: 0 })),
+  quizCorrect: 0, quizWrong: 0,
+  startDate: Date.now(),
+  chatHistory: []
+};
+
+let curCard = 0, flipped = false, qAnswered = false, qWord = null;
+
+function save() { localStorage.setItem('hsk_state', JSON.stringify(state)); }
+
+function go(name) {
+  document.querySelectorAll('.nav-btn').forEach((b,i) => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  if (name === 'quiz') loadQuiz();
+  if (name === 'stats') renderStats();
+  if (name === 'settings') {
+    const k = localStorage.getItem('anthropic_key') || '';
+    document.getElementById('api-key-input').value = k;
+  }
+}
+
+function getQueue() {
+  const now = Date.now();
+  return state.cards.filter(c => c.nextReview <= now);
+}
+
+function showCard() {
+  const q = getQueue();
+  const card = q.length > 0 ? q[0] : state.cards[curCard % state.cards.length];
+  const w = WORDS[card.idx];
+  document.getElementById('fc-char').textContent = w.c;
+  document.getElementById('fc-pinyin').textContent = w.p;
+  document.getElementById('fc-meaning').textContent = w.m;
+  document.getElementById('fc-example').innerHTML = w.ex.replace('(', '<br><span style="font-size:11px;color:var(--muted);">(') + '</span>';
+  document.getElementById('fc-back').style.display = 'none';
+  document.getElementById('fc-hint').style.display = '';
+  document.getElementById('card-actions').classList.remove('show');
+  document.getElementById('card-pos').textContent = (curCard % state.cards.length + 1) + ' / ' + state.cards.length;
+  document.getElementById('card-queue').textContent = 'Для повторения: ' + getQueue().length;
+  flipped = false;
+  renderDots();
+}
+
+function renderDots() {
+  const d = document.getElementById('dots');
+  d.innerHTML = '';
+  state.cards.slice(0, 30).forEach((c, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (c.level >= 3 ? ' known' : c.level > 0 ? ' learning' : '') + (i === curCard % 30 ? ' current' : '');
+    d.appendChild(dot);
+  });
+}
+
+function flip() {
+  if (flipped) return;
+  flipped = true;
+  document.getElementById('fc-back').style.display = 'block';
+  document.getElementById('fc-hint').style.display = 'none';
+  document.getElementById('card-actions').classList.add('show');
+}
+
+function rate(r) {
+  const q = getQueue();
+  const card = q.length > 0 ? q[0] : state.cards[curCard % state.cards.length];
+  const intervals = [0, 1, 10, 60, 24*60, 7*24*60];
+  const now = Date.now();
+  if (r === 1) { card.level = Math.max(0, card.level - 1); card.wrong++; }
+  else if (r === 2) { card.wrong++; }
+  else { card.level = Math.min(5, card.level + 1); card.correct++; }
+  const minMs = (intervals[card.level] || 0) * 60 * 1000;
+  card.nextReview = now + minMs;
+  curCard++;
+  save();
+  showCard();
+}
+
+// QUIZ
+function loadQuiz() {
+  qAnswered = false;
+  document.getElementById('qfeedback').textContent = '';
+  qWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+  document.getElementById('qchar').textContent = qWord.c;
+  document.getElementById('qlabel').textContent = 'Выбери перевод';
+  const opts = [qWord.m];
+  while (opts.length < 4) {
+    const r = WORDS[Math.floor(Math.random() * WORDS.length)].m;
+    if (!opts.includes(r)) opts.push(r);
+  }
+  opts.sort(() => Math.random() - 0.5);
+  const container = document.getElementById('qopts');
+  container.innerHTML = '';
+  opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    btn.textContent = o;
+    btn.onclick = () => checkQuiz(btn, o);
+    container.appendChild(btn);
+  });
+  document.getElementById('q-correct').textContent = state.quizCorrect + ' правильно';
+  document.getElementById('q-wrong').textContent = state.quizWrong + ' неверно';
+}
+
+function checkQuiz(btn, ans) {
+  if (qAnswered) return;
+  qAnswered = true;
+  const correct = ans === qWord.m;
+  if (correct) { btn.classList.add('correct'); state.quizCorrect++; document.getElementById('qfeedback').textContent = '✓ Верно! ' + qWord.c + ' = ' + qWord.p + ' = ' + qWord.m; }
+  else {
+    btn.classList.add('wrong');
+    state.quizWrong++;
+    document.querySelectorAll('.quiz-opt').forEach(b => { if (b.textContent === qWord.m) b.classList.add('correct'); });
+    document.getElementById('qfeedback').textContent = '✗ Правильно: ' + qWord.m + ' (' + qWord.p + ')';
+  }
+  document.getElementById('q-correct').textContent = state.quizCorrect + ' правильно';
+  document.getElementById('q-wrong').textContent = state.quizWrong + ' неверно';
+  save();
+  setTimeout(loadQuiz, 1800);
+}
+
+// CHAT
+async function sendMsg() {
+  const inp = document.getElementById('chat-in');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  appendMsg(text, 'user');
+  state.chatHistory.push({ role: 'user', content: text });
+
+  const typing = appendMsg('...', 'ai typing');
+
+  const key = localStorage.getItem('anthropic_key');
+  if (!key) {
+    typing.textContent = 'API ключ не настроен. Зайди в ⚙ Настройки и добавь ключ.';
+    typing.classList.remove('typing');
+    return;
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'Ты дружелюбный преподаватель китайского языка для начинающих (уровень HSK 1). Студент русскоязычный. Всегда отвечай по-русски. Рядом с иероглифами всегда давай пиньинь в скобках. Объяснения короткие. Исправляй ошибки мягко. Поддерживай мотивацию. Когда даёшь новые слова, обязательно пиши: иероглиф (пиньинь) — перевод.',
+        messages: state.chatHistory.slice(-10)
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'Ошибка ответа.';
+    typing.textContent = reply;
+    typing.classList.remove('typing');
+    state.chatHistory.push({ role: 'assistant', content: reply });
+    save();
+  } catch(e) {
+    typing.textContent = 'Ошибка соединения. Проверь API ключ в настройках.';
+    typing.classList.remove('typing');
+  }
+}
+
+function quickSend(text) {
+  document.getElementById('chat-in').value = text;
+  sendMsg();
+}
+
+function appendMsg(text, cls) {
+  const msgs = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = 'msg ' + cls;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+// STATS
+function renderStats() {
+  const known = state.cards.filter(c => c.level >= 3).length;
+  const learning = state.cards.filter(c => c.level > 0 && c.level < 3).length;
+  const days = Math.max(1, Math.ceil((Date.now() - state.startDate) / 86400000));
+  document.getElementById('s-known').textContent = known;
+  document.getElementById('s-learning').textContent = learning;
+  document.getElementById('s-days').textContent = days;
+  const pct = Math.round(known / 150 * 100);
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-fill').style.width = pct + '%';
+  const total = state.quizCorrect + state.quizWrong;
+  const acc = total > 0 ? Math.round(state.quizCorrect / total * 100) : 0;
+  document.getElementById('acc-pct').textContent = total > 0 ? acc + '%' : '—';
+  document.getElementById('acc-fill').style.width = acc + '%';
+
+  const list = document.getElementById('word-list');
+  const studied = state.cards.filter(c => c.level > 0);
+  if (studied.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;">Пока нет изученных слов — начни с карточек!</div>';
+    return;
+  }
+  list.innerHTML = '';
+  studied.slice(0, 20).forEach(c => {
+    const w = WORDS[c.idx];
+    const tag = c.level >= 3 ? 'known' : 'learning';
+    const tagText = c.level >= 3 ? 'Знаю' : 'Учу';
+    const row = document.createElement('div');
+    row.className = 'word-row';
+    row.innerHTML = `<span class="word-char">${w.c}</span><span class="word-info">${w.p} — ${w.m}</span><span class="tag ${tag}">${tagText}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function saveKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (key) { localStorage.setItem('anthropic_key', key); alert('Ключ сохранён! Теперь диалог с ИИ работает.'); }
+  else { alert('Введи API ключ'); }
+}
+
+function resetProgress() {
+  if (confirm('Сбросить весь прогресс? Это нельзя отменить.')) {
+    localStorage.removeItem('hsk_state');
+    location.reload();
+  }
+}
+
+showCard();
+</script>
+</body>
+</html>
