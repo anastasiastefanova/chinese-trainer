@@ -245,13 +245,12 @@ body {
   <!-- НАСТРОЙКИ -->
   <div class="section" id="sec-settings">
     <div class="settings-group">
-      <div class="settings-row" style="flex-direction:column; align-items:flex-start;">
+      <div class="settings-row">
         <div>
           <div class="settings-label">API ключ Anthropic</div>
-          <div class="settings-sub">Нужен для работы диалога с ИИ</div>
+          <div class="settings-sub">Настраивается через переменные окружения Vercel</div>
         </div>
-        <input class="api-input" id="api-key-input" type="password" placeholder="sk-ant-..." />
-        <button class="save-btn" style="margin-top:10px;" onclick="saveKey()">Сохранить</button>
+        <span style="font-size:12px; color:var(--green);">✓ На сервере</span>
       </div>
     </div>
     <div class="settings-group">
@@ -264,12 +263,9 @@ body {
       </div>
     </div>
     <div class="info-box">
-      <strong style="color:var(--text);">Как получить API ключ:</strong><br>
-      1. Зайди на <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
-      2. Создай ключ в разделе "API Keys"<br>
-      3. Пополни баланс на $5 в Billing<br>
-      4. Вставь ключ выше и нажми "Сохранить"<br><br>
-      Ключ хранится только в твоём браузере (localStorage).
+      <strong style="color:var(--text);">API ключ настроен на сервере Vercel.</strong><br>
+      Если диалог не работает — проверь переменную окружения<br>
+      <code>ANTHROPIC_API_KEY</code> в настройках проекта на vercel.com.
     </div>
   </div>
 </div>
